@@ -1,0 +1,12 @@
+version: '3'
+services:
+  app:
+    image: {{ nginx_proxy_manager_image }}
+    restart: unless-stopped
+    ports:
+      - "{{ nginx_proxy_manager_http_port }}:80"
+      - "{{ nginx_proxy_manager_https_port }}:443"
+      - "{{ nginx_proxy_manager_ui_port }}:81"
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt

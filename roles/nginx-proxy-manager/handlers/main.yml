@@ -1,0 +1,13 @@
+---
+# Handlers for nginx-proxy-manager role
+- name: Restart docker service
+  service:
+    name: docker
+    state: restarted
+  become: true
+
+- name: Restart Nginx Proxy Manager containers
+  command: docker compose restart app
+  args:
+    chdir: "{{ nginx_proxy_manager_data_dir }}"
+  become: true

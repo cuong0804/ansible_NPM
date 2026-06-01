@@ -1,0 +1,5 @@
+---
+# Host-specific overrides for vm_nginx
+ansible_host: 192.0.2.10
+ansible_user: ubuntu
+nginx_proxy_manager_ui_port: 81

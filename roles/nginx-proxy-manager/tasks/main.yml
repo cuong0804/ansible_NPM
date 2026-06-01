@@ -1,0 +1,81 @@
+---
+---
+- name: Ensure apt cache is up to date (Debian family)
+  apt:
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install prerequisites for Docker (Ubuntu)
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+    update_cache: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Docker GPG key (Ubuntu)
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Add Docker apt repository (Ubuntu)
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable"
+    state: present
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install Docker CE and compose plugin (Ubuntu)
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Ensure docker service is started and enabled
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create Nginx Proxy Manager data directory
+  file:
+    path: "{{ nginx_proxy_manager_data_dir }}"
+    state: directory
+    owner: "{{ nginx_proxy_manager_user | default('root') }}"
+    mode: '0755'
+
+- name: Deploy docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ nginx_proxy_manager_data_dir }}/docker-compose.yml"
+    mode: '0644'
+  notify: Restart Nginx Proxy Manager
+
+- name: Ensure helper script is present
+  copy:
+    src: scripts/setup.sh
+    dest: "{{ nginx_proxy_manager_data_dir }}/setup.sh"
+    mode: '0755'
+  notify: Restart Nginx Proxy Manager
+
+- name: Run helper setup script (create dirs)
+  command: ./setup.sh "{{ nginx_proxy_manager_data_dir }}"
+  args:
+    chdir: "{{ nginx_proxy_manager_data_dir }}"
+  changed_when: false
+
+- name: Launch Nginx Proxy Manager (docker compose)
+  command: docker compose up -d
+  args:
+    chdir: "{{ nginx_proxy_manager_data_dir }}"
+  register: compose_up
+  changed_when: compose_up.rc == 0

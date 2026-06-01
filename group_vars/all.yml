@@ -1,0 +1,4 @@
+---
+# Global variables for all hosts
+nginx_proxy_manager_data_dir: /opt/nginx-proxy-manager
+ansible_python_interpreter: /usr/bin/python3

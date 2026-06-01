@@ -1,0 +1,4 @@
+---
+# Per-host overrides for example.com
+ansible_host: 192.0.2.10
+nginx_proxy_manager_ui_port: 81
